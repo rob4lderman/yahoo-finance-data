@@ -65,8 +65,23 @@
     # http://pandas.pydata.org/pandas-docs/stable/basics.html#basics-stats
 
 
+## TODO
 
-## Stock Lists
+* NOTE: past market returns are biased!!
+    * they don't incorporate FAILED businesses
+    * only businesses that are still around are measured
+
+* TODO: $ pip3 install TA-Lib 
+    * NotImplementedError: cygwin
+    * [http://mrjbq7.github.io/ta-lib/](http://mrjbq7.github.io/ta-lib/)
+    * [http://mrjbq7.github.io/ta-lib/install.html](http://mrjbq7.github.io/ta-lib/install.html)
+* TODO: python plotting
+    * python vs r: [http://www.eickonomics.com/posts/2014-03-25-python-vs-R-adding-TA-indicators/](http://www.eickonomics.com/posts/2014-03-25-python-vs-R-adding-TA-indicators/)
+* TODO: time-series correlations: [https://en.wikipedia.org/wiki/Autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation)
+
+
+--------------------------------------------------------------------------------------------------------------
+## Stock Lists / Indexes
 
 * amex.companylist.csv
 * nasdaq.companylist.csv
@@ -80,17 +95,6 @@
 * Russell 1000: (^RUI) Top 1000 of Russell 3000.  90% of equity market.
 * Russell has like 1800+ indices, covering stocks across the globe
 * S&P 500: (^GSPC) 500 largest by market cap.  "Large-cap".
-* NOTE: past market returns are biased!!
-    * they don't incorporate FAILED businesses
-    * only businesses that are still around are measured
-
-* TODO: $ pip3 install TA-Lib 
-    * NotImplementedError: cygwin
-    * [http://mrjbq7.github.io/ta-lib/](http://mrjbq7.github.io/ta-lib/)
-    * [http://mrjbq7.github.io/ta-lib/install.html](http://mrjbq7.github.io/ta-lib/install.html)
-* TODO: python plotting
-    * python vs r: [http://www.eickonomics.com/posts/2014-03-25-python-vs-R-adding-TA-indicators/](http://www.eickonomics.com/posts/2014-03-25-python-vs-R-adding-TA-indicators/)
-
 
 
 --------------------------------------------------------------------------------------------------------------
@@ -729,4 +733,313 @@ http://finance.yahoo.com/webservice/v1/symbols/YHOO,AAPL/quote?format=json&view=
     $ ./runquery.pl --action downloadYahooHistoricalData --symbol IBM --startdate 2016-04-25 --enddate 2016-05-01
 
     $ ./runquery.pl --action processHistoricalData --symbol IBM 
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+## TA-Lib Technical Analysis Indicators
+
+
+### Retracement vs Reversal Indicators
+
+* Volume
+    * Retracement: small lots (retail traders)
+    * Reversal: large lots (institutional traders)
+* Money Flow
+    * Retracement: buying interest during decline
+    * Reversal: little buying interest
+* Chart Patterns
+    * Retracement: few reversal patterns.  maybe some candles
+    * Reversal: several reversal patterns, usually chart patterns, e.g. double top
+* Short interest
+    * Retracement: no change
+    * Reversal: increasing short interest
+* Time Frame
+    * Retracement: short-term reversal, no longer than 1 - 2 weeks
+    * Reversal: long-term reversal, lasts longer than 2 weeks
+* Fundamentals
+    * Retracement: no change
+    * Reversal: change or speculation of change in fundamentals
+* Recent Activity:
+    * Retracement: usually occurs right after large gains
+    * Reversal: can happen any time
+* Candlesticks:
+    * Retracement: "indecision candles": typically have long tops and bottoms (e.g. spinning tops)
+    * Reversal: reversal candles, e.g engulfings, soldiers, etc
+
+
+
+### Overlap Studies
+
+* BBANDS: Bollinger Bands
+    * volatility indicator
+    * N-period moving average (MA) 
+        * default: N=20
+        * default: simple moving average
+        * "middleBB"
+    * upper band, "upperBB": MA + K * stdev(MA)    
+        * default K=2
+    * lower band, "lowerBB": MA - K * stdev(MA)
+    * %b = (last-lowerBB) / (upperBB/lowerBB)
+        * relative position within the band
+    * bandwidth = (upperBB-lowerBB)/middleBB
+        * normalized width of band
+        * for direct comparison with other assets
+        * bandwidth = (2*stdev(middleBB) - (-2*stdev(moddleBB)))/middleBB = 4*stdev(middleBB)/middleBB = 2*K*stdev(middleBB)/middleBB
+    * strategy:
+        * bands close together: low volatility
+        * bands far apart: high volatility
+        * buy when price touches/crosses lower band
+        * sell when price touches/crosses higher band
+        * sell options when bands are historically far apart
+        * buy options when bands are historically close together
+            * expecting volatility to regress to normal
+        * confirm price action when combined with other indicators
+    * studies:
+        * no benefit over buy and hold
+        * "contrarian bollinger bands": produced some positive results
+* DEMA: Double Exponential Moving Average
+    * attempts to minimize the lag associated with moving averages
+    * DEMA = 2*EMA - EMA(EMA)
+        * EMA(EMA) removes the lag and accounts for the doubling of the EMA
+* EMA: Exponential Moving Average
+    * "weighted" moving average
+    * S1 = Y1
+    * St = alpha * Yt + (1-alpha) * St-1
+        * alpha: weighting factor
+    * EMAtoday = EMAyesterday + alpha * (Ytoday - EMAyesterday)
+* SMMA: Smoothed Moving Average (not in TA_Lib)
+    * aka Modified Moving Average
+    * aka Running Moving Average
+    * SMMA = EMA with alpha = 1/N
+* HT_TRENDLINE         Hilbert Transform - Instantaneous Trendline
+    * like a moving average, but with minimal lag
+* KAMA                 Kaufman Adaptive Moving Average
+* MA                   Moving average
+* MAMA                 MESA Adaptive Moving Average
+* MAVP                 Moving average with variable period
+* MIDPOINT             MidPoint over period
+* MIDPRICE             Midpoint Price over period
+* SAR                  Parabolic SAR
+* SAREXT               Parabolic SAR - Extended
+* SMA                  Simple Moving Average
+* T3                   Triple Exponential Moving Average (T3)
+* TEMA                 Triple Exponential Moving Average
+* TRIMA                Triangular Moving Average
+* WMA                  Weighted Moving Average
+
+
+### Momentum Indicators
+
+* ADX: Average Directional Movement Index
+    * "Trend strength indicator"
+    * used to determine when price is trending strongly
+    * THE ULTIMATE TREND INDICATOR
+    * ADX is bi-directional
+        * measures abs value of trend strength, up or down
+        * values: 0 to 100
+            * 0-25: weak trend
+                * if ADX below 25 for more than 30 bars...
+                * price enters trading range conditions
+                * combine with candlestick patterns to anticipate breakouts
+                * confirm with rising ADX
+            * 25-50: strong trend
+            * 50-75: very strong trend
+            * 75-100: extremely strong trend
+    * Plotted with two DMI (Directional Movement Indicators)
+        * "upmove": High_today - High_yesterday
+        * "downmove": Low_yesterday - Low_today
+        * if (upmove > 0 AND upmove > downmove)
+            * then: +DM = upmove
+            * else: +DM = 0
+        * if (downmove > 0 AND downmove > upmove)
+            * then: -DM = downmove
+            * else: -DM = 0
+        * \+DMI = 100 * SMMA(+DM) / average-true-range
+        * \-DMI = 100 * SMMA(-DM) / average-true-range
+        * SMMA = smoothed moving average
+    * ADX=  100 * SMMA( +DI - -DI / +DI + -DI )
+    * default N=14 (for SMMA)
+    * Strategy: Elder:
+        * buy: ADX peaks and starts to decline
+        * sell: ADX stops falling and goes flat
+* ADXR: Average Directional Movement Index Rating
+    * average of two ADX periods
+    * ADXR = (ADX_i - ADX_i-n) / 2
+    * n = period of ADX SMMA (default=14)
+    * smoothes the ADX
+* APO                  Absolute Price Oscillator
+* AROON                Aroon
+* AROONOSC             Aroon Oscillator
+* BOP                  Balance Of Power
+* CCI                  Commodity Channel Index
+* CMO                  Chande Momentum Oscillator
+* DX                   Directional Movement Index
+* MACD                 Moving Average Convergence/Divergence
+* MACDEXT              MACD with controllable MA type
+* MACDFIX              Moving Average Convergence/Divergence Fix 12/26
+* MFI                  Money Flow Index
+    * volume-weighted RSI
+    * typical price = (High + Low + Close) / 3
+    * raw money flow = typical price * volume
+        * positive when typical price_today > typical price_yesterday
+        * negative when typical price_today < typical price_yesterday
+    * money flow ratio = (14-period positive money flow) / (14-period negative money flow)
+    * money flow index = 100 - 100 / (1 + money flow ratio)
+    * alternatively: money flow index = 100 * positive money flow / (positive + negative money flow)
+        * i.e. the proporition of money flow thats positive
+    * strategy: indicates overbought and oversold conditions
+        * MFI > 80 = overbought
+            * 80+% of money flow has been positive
+        * MFI < 20 = oversold
+            * 80+% of money flow has been negative
+    * strategy: divergence: 
+        * asset makes higher high
+        * but MFI makes lower high
+        * could signal reversal
+        * and vice-versa
+* MINUS_DI             Minus Directional Indicator
+* MINUS_DM             Minus Directional Movement
+* MOM                  Momentum
+* PLUS_DI              Plus Directional Indicator
+* PLUS_DM              Plus Directional Movement
+* PPO                  Percentage Price Oscillator
+* ROC                  Rate of change : ((price/prevPrice)-1)*100
+* ROCP                 Rate of change Percentage: (price-prevPrice)/prevPrice
+* ROCR                 Rate of change ratio: (price/prevPrice)
+* ROCR100              Rate of change ratio 100 scale: (price/prevPrice)*100
+* RSI                  Relative Strength Index
+    * upday = Close_today - Close_yesterday, if Close_today > Close_yesterday, else 0
+    * downday = Close_today - Close_yesterday, if Close_today < Close_yesterday, else 0
+    * RS = SMMMA( updays, n ) / SMMA( downdays, n )
+        * RS > 1 if SMMA(updays) > SMMA(downdays)
+            * positive momentum
+        * RS = 1 if SMMA(updays) == SMMA(downdays)
+            * sideways
+        * RS < 1 if SMMA(updays) < SMMA(downdays)
+            * negative momentum
+    * RSI = 100 - 100 / (1 + RS)
+    * alternatively: RSI = 100 * SMMA(updays) / SMMA(updays) + SMMA(downdays)
+        * proportion of updays relative to downdays
+    * strategy: overbought/oversold
+        * RSI > 80 = overbought
+        * RSI < 20 = oversold
+    * strategy: divergence
+        * bearish: price makes new high but RSI makes lower high
+        * bullish: price makes new low but RSI makes higher low
+* STOCH: Stochastic (Oscillator?)
+    * %K = 100 * (Close_today - Low_n) / (High_n - Low_n)
+    * n = number of trading periods (default = 14)
+    * measures where today's close is,
+        * relative to the trading range over the last n periods
+    * %D = 3-day moving average of %K
+    * transaction signals when %K crosses %D
+    * %K > 80 
+        * if Close_today is near the high for the trading range
+    * %K < 20
+        * if Close_today is near the low of the trading range
+* STOCHF               Stochastic Fast
+* STOCHRSI             Stochastic Relative Strength Index
+* TRIX                 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA
+* ULTOSC               Ultimate Oscillator
+* WILLR                Williams' %R
+
+
+### Volume Indicators
+
+* AD                   Chaikin A/D Line
+* ADOSC                Chaikin A/D Oscillator
+* OBV                  On Balance Volume
+
+### Cycle Indicators
+
+* HT_DCPERIOD          Hilbert Transform - Dominant Cycle Period
+* HT_DCPHASE           Hilbert Transform - Dominant Cycle Phase
+* HT_PHASOR            Hilbert Transform - Phasor Components
+* HT_SINE              Hilbert Transform - SineWave
+* HT_TRENDMODE         Hilbert Transform - Trend vs Cycle Mode
+
+### Price Transform
+
+* AVGPRICE             Average Price
+* MEDPRICE             Median Price
+* TYPPRICE             Typical Price
+* WCLPRICE             Weighted Close Price
+
+### Volatility Indicators
+
+* ATR: Average True Range 
+    * N-day SMMA of "true range" values
+    * "true range"
+        * High - Low
+        * takes into account yesterday's close
+            * if it's outside today's High-Low range
+* NATR                 Normalized Average True Range
+* TRANGE               True Range
+
+
+### Pattern Recognition
+
+* CDL2CROWS            Two Crows
+* CDL3BLACKCROWS       Three Black Crows
+* CDL3INSIDE           Three Inside Up/Down
+* CDL3LINESTRIKE       Three-Line Strike
+* CDL3OUTSIDE          Three Outside Up/Down
+* CDL3STARSINSOUTH     Three Stars In The South
+* CDL3WHITESOLDIERS    Three Advancing White Soldiers
+* CDLABANDONEDBABY     Abandoned Baby
+* CDLADVANCEBLOCK      Advance Block
+* CDLBELTHOLD          Belt-hold
+* CDLBREAKAWAY         Breakaway
+* CDLCLOSINGMARUBOZU   Closing Marubozu
+* CDLCONCEALBABYSWALL  Concealing Baby Swallow
+* CDLCOUNTERATTACK     Counterattack
+* CDLDARKCLOUDCOVER    Dark Cloud Cover
+* CDLDOJI              Doji
+* CDLDOJISTAR          Doji Star
+* CDLDRAGONFLYDOJI     Dragonfly Doji
+* CDLENGULFING         Engulfing Pattern
+* CDLEVENINGDOJISTAR   Evening Doji Star
+* CDLEVENINGSTAR       Evening Star
+* CDLGAPSIDESIDEWHITE  Up/Down-gap side-by-side white lines
+* CDLGRAVESTONEDOJI    Gravestone Doji
+* CDLHAMMER            Hammer
+* CDLHANGINGMAN        Hanging Man
+* CDLHARAMI            Harami Pattern
+* CDLHARAMICROSS       Harami Cross Pattern
+* CDLHIGHWAVE          High-Wave Candle
+* CDLHIKKAKE           Hikkake Pattern
+* CDLHIKKAKEMOD        Modified Hikkake Pattern
+* CDLHOMINGPIGEON      Homing Pigeon
+* CDLIDENTICAL3CROWS   Identical Three Crows
+* CDLINNECK            In-Neck Pattern
+* CDLINVERTEDHAMMER    Inverted Hammer
+* CDLKICKING           Kicking
+* CDLKICKINGBYLENGTH   Kicking - bull/bear determined by the longer marubozu
+* CDLLADDERBOTTOM      Ladder Bottom
+* CDLLONGLEGGEDDOJI    Long Legged Doji
+* CDLLONGLINE          Long Line Candle
+* CDLMARUBOZU          Marubozu
+* CDLMATCHINGLOW       Matching Low
+* CDLMATHOLD           Mat Hold
+* CDLMORNINGDOJISTAR   Morning Doji Star
+* CDLMORNINGSTAR       Morning Star
+* CDLONNECK            On-Neck Pattern
+* CDLPIERCING          Piercing Pattern
+* CDLRICKSHAWMAN       Rickshaw Man
+* CDLRISEFALL3METHODS  Rising/Falling Three Methods
+* CDLSEPARATINGLINES   Separating Lines
+* CDLSHOOTINGSTAR      Shooting Star
+* CDLSHORTLINE         Short Line Candle
+* CDLSPINNINGTOP       Spinning Top
+* CDLSTALLEDPATTERN    Stalled Pattern
+* CDLSTICKSANDWICH     Stick Sandwich
+* CDLTAKURI            Takuri (Dragonfly Doji with very long lower shadow)
+* CDLTASUKIGAP         Tasuki Gap
+* CDLTHRUSTING         Thrusting Pattern
+* CDLTRISTAR           Tristar Pattern
+* CDLUNIQUE3RIVER      Unique 3 River
+* CDLUPSIDEGAP2CROWS   Upside Gap Two Crows
+* CDLXSIDEGAP3METHODS  Upside/Downside Gap Three Methods
 
